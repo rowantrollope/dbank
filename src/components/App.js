@@ -1,18 +1,20 @@
-import { Tabs, Tab } from 'react-bootstrap'
-import dBank from '../abis/dBank.json'
 import React, { Component } from 'react';
-import Token from '../abis/Token.json'
 import Web3 from 'web3';
-import './App.css';
+import Token from '../abis/Token.json'
+import dBank from '../abis/dBank.json'
 import MyNav from "./MyNav.js";
+import Main from "./Main.js";
+import './App.css';
 
 class App extends Component {
 
- async componentDidMount() {
+  async componentDidMount() {
     await this.loadBlockchainData(this.props.dispatch)
+    this.setState({loading: false})
   }
 
   async loadBlockchainData(dispatch) {
+    
     if(typeof window.ethereum!=='undefined'){
       const web3 = new Web3(window.ethereum)
       const netId = await web3.eth.net.getId()
@@ -42,7 +44,8 @@ class App extends Component {
     }
   }
 
-  async deposit(amount) {
+  deposit = async (amount) => {
+    this.setState({loading: true})
     if(this.state.dbank!=='undefined'){
       try{
         await this.state.dbank.methods.deposit().send({value: amount.toString(), from: this.state.account})
@@ -50,9 +53,11 @@ class App extends Component {
         console.log('Error, deposit: ', e)
       }
     }
+    this.setState({loading: false})
   }
 
-  async withdraw(e) {
+  withdraw = async (e) => {
+    this.setState({loading: true})
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
@@ -61,9 +66,11 @@ class App extends Component {
         console.log('Error, withdraw: ', e)
       }
     }
+    this.setState({loading: false})
   }
 
-  async borrow(amount) {
+  borrow = async (amount) => {
+    this.setState({loading: true})
     if(this.state.dbank!=='undefined'){
       try{
         await this.state.dbank.methods.borrow().send({value: amount.toString(), from: this.state.account})
@@ -71,9 +78,11 @@ class App extends Component {
         console.log('Error, borrow: ', e)
       }
     }
+    this.setState({loading: false})
   }
 
-  async payOff(e) {
+  payOff = async (e) => {
+    this.setState({loading: true})
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
@@ -85,6 +94,7 @@ class App extends Component {
         console.log('Error, pay off: ', e)
       }
     }
+    this.setState({loading: false})
   }
 
   constructor(props) {
@@ -95,109 +105,28 @@ class App extends Component {
       token: null,
       dbank: null,
       balance: 0,
-      dBankAddress: null
+      dBankAddress: null,
+      loading: true
     }
   }
 
   render() {
+    let content
+    if(this.state.loading) {
+      content = <p id="loader" className="text-center">Loading...</p>
+    } else {
+      content = <Main 
+        deposit={this.deposit}
+        withdraw={this.withdraw}
+        borrow={this.borrow}
+        payOff={this.payOff}
+      />      
+    }
+
     return (
       <div className='text-monospace'>
         <MyNav account = {this.state.account}/>
-        <div className="container-fluid mt-5 text-center">
-        <br></br>
-          <div className="row">
-            <main role="main" className="col-lg-12 d-flex text-center">
-              <div className="content mr-auto ml-auto">
-              <Tabs defaultActiveKey="profile" id="uncontrolled-tab-example">
-                <Tab eventKey="deposit" title="Deposit">
-                  <div>
-                  <br></br>
-                    How much do you want to deposit?
-                    <br></br>
-                    (min. amount is 0.01 ETH)
-                    <br></br>
-                    (1 deposit is possible at the time)
-                    <br></br>
-                    <form onSubmit={(e) => {
-                      e.preventDefault()
-                      let amount = this.depositAmount.value
-                      amount = amount * 10**18 //convert to wei
-                      this.deposit(amount)
-                    }}>
-                      <div className='form-group mr-sm-2'>
-                      <br></br>
-                        <input
-                          id='depositAmount'
-                          step="0.01"
-                          type='number'
-                          ref={(input) => { this.depositAmount = input }}
-                          className="form-control form-control-md"
-                          placeholder='amount...'
-                          required />
-                      </div>
-                      <button type='submit' className='btn btn-primary'>DEPOSIT</button>
-                    </form>
-
-                  </div>
-                </Tab>
-                <Tab eventKey="withdraw" title="Withdraw">
-                  <br></br>
-                    Do you want to withdraw + take interest?
-                    <br></br>
-                    <br></br>
-                  <div>
-                    <button type='submit' className='btn btn-primary' onClick={(e) => this.withdraw(e)}>WITHDRAW</button>
-                  </div>
-                </Tab>
-                <Tab eventKey="borrow" title="Borrow">
-                  <div>
-
-                  <br></br>
-                    Do you want to borrow tokens?
-                    <br></br>
-                    (You'll get 50% of collateral, in Tokens)
-                    <br></br>
-                    Type collateral amount (in ETH)
-                    <br></br>
-                    <br></br>
-                    <form onSubmit={(e) => {
-
-                      e.preventDefault()
-                      let amount = this.borrowAmount.value
-                      amount = amount * 10 **18 //convert to wei
-                      this.borrow(amount)
-                    }}>
-                      <div className='form-group mr-sm-2'>
-                        <input
-                          id='borrowAmount'
-                          step="0.01"
-                          type='number'
-                          ref={(input) => { this.borrowAmount = input }}
-                          className="form-control form-control-md"
-                          placeholder='amount...'
-                          required />
-                      </div>
-                      <button type='submit' className='btn btn-primary'>BORROW</button>
-                    </form>
-                  </div>
-                </Tab>
-                <Tab eventKey="payOff" title="Payoff">
-                  <div>
-
-                  <br></br>
-                    Do you want to payoff the loan?
-                    <br></br>
-                    (You'll receive your collateral - fee)
-                    <br></br>
-                    <br></br>
-                    <button type='submit' className='btn btn-primary' onClick={(e) => this.payOff(e)}>PAYOFF</button>
-                  </div>
-                </Tab>
-              </Tabs>
-              </div>
-            </main>
-          </div>
-        </div>
+        { content }
       </div>
     );
   }
