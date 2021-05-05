@@ -4,6 +4,8 @@ import Token from '../abis/Token.json'
 import dBank from '../abis/dBank.json'
 import MyNav from "./MyNav.js";
 import Main from "./Main.js";
+import Spinner from "react-bootstrap/Spinner";
+
 import './App.css';
 
 class App extends Component {
@@ -113,7 +115,13 @@ class App extends Component {
   render() {
     let content
     if(this.state.loading) {
-      content = <p id="loader" className="text-center">Loading...</p>
+      content =
+        <p className="text-center">
+          <Spinner animation="border" role="status">
+          <span className="sr-only">Loading...</span>
+        </Spinner>
+        </p>
+//      content = <p id="loader" className="text-center">Loading...</p>
     } else {
       content = <Main 
         deposit={this.deposit}
