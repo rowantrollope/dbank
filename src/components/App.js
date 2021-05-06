@@ -4,7 +4,7 @@ import Token from '../abis/Token.json'
 import dBank from '../abis/dBank.json'
 import MyNav from "./MyNav.js";
 import Main from "./Main.js";
-import Spinner from "react-bootstrap/Spinner";
+import { Container, Spinner, Alert, Row, Col } from 'react-bootstrap';
 
 import './App.css';
 
@@ -21,11 +21,12 @@ class App extends Component {
       const web3 = new Web3(window.ethereum)
       const netId = await web3.eth.net.getId()
       const accounts = await web3.eth.getAccounts()
+      window.web3 = web3;
 
-      //load balance
+      //load accounts
       if(typeof accounts[0] !=='undefined'){
-        const balance = await web3.eth.getBalance(accounts[0])
-        this.setState({account: accounts[0], balance: balance, web3: web3})
+        this.setState({account: accounts[0],  
+                       web3})
       } else {
         window.alert('Please login with MetaMask')
       }
@@ -34,23 +35,60 @@ class App extends Component {
       try {
         const token = new web3.eth.Contract(Token.abi, Token.networks[netId].address)
         const dbank = new web3.eth.Contract(dBank.abi, dBank.networks[netId].address)
-        const dBankAddress = dBank.networks[netId].address
-        this.setState({token: token, dbank: dbank, dBankAddress: dBankAddress})
+        const dBankAddress = dBank.networks[netId].address;
+        this.setState({ token, 
+                        dbank, 
+                        dBankAddress })
+
       } catch (e) {
         console.log('Error', e)
-        window.alert('Contracts not deployed to the current network')
+        window.alert('Error loading contracts')
+      }
+
+      // load balances
+      try {
+        let isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+        let dBankBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
+        let walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
+        let walletBalance_DBC= await this.state.token.methods.balanceOf(this.state.account).call();
+        this.setState({  
+          isDeposited, 
+          dBankBalance_ETH,
+          walletBalance_ETH, 
+          walletBalance_DBC })
+      } catch (e) {
+        console.log('Error', e)
+        window.alert('Error Loading balances')
       }
 
     } else {
       window.alert('Please install MetaMask')
     }
   }
+  
+  // Update balances and state vars 
+  update_balances = async() => {
+
+    const isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+    const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
+    const walletBalance_DBC = await this.state.token.methods.balanceOf(this.state.account).call();
+    const dBankBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
+
+    this.setState({ isDeposited, 
+                    walletBalance_ETH,
+                    walletBalance_DBC,
+                    dBankBalance_ETH })
+
+  }
 
   deposit = async (amount) => {
+    
     this.setState({loading: true})
     if(this.state.dbank!=='undefined'){
       try{
         await this.state.dbank.methods.deposit().send({value: amount.toString(), from: this.state.account})
+        this.update_balances();
+
       } catch (e) {
         console.log('Error, deposit: ', e)
       }
@@ -58,18 +96,31 @@ class App extends Component {
     this.setState({loading: false})
   }
 
+  //balanceOf = async (account) => {
+  //  await this.state.web3.eth.getBalance(account);
+  //}
+
   withdraw = async (e) => {
     this.setState({loading: true})
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
         await this.state.dbank.methods.withdraw().send({from: this.state.account})
-      } catch(e) {
+        this.update_balances();
+     } catch(e) {
         console.log('Error, withdraw: ', e)
       }
     }
     this.setState({loading: false})
   }
+
+  /*updateBalances = async () => {
+    const balance = await this.state.web3.eth.getBalance(this.state.account);
+    this.setState({walletBalance_ETH: balance});
+    balance = await this.state.token.balanceOf(this.state.account);
+    this.setState({walletBalance_DBC: balance}); 
+
+  }*/
 
   borrow = async (amount) => {
     this.setState({loading: true})
@@ -106,8 +157,11 @@ class App extends Component {
       account: '',
       token: null,
       dbank: null,
-      balance: 0,
+      walletBalance_ETH: 0,
+      walletBalance_DBC: 0,
+      dBankBalance_ETH: 0,
       dBankAddress: null,
+      isDeposited: false,
       loading: true
     }
   }
@@ -116,11 +170,17 @@ class App extends Component {
     let content
     if(this.state.loading) {
       content =
-        <p className="text-center">
-          <Spinner animation="border" role="status">
-          <span className="sr-only">Loading...</span>
-        </Spinner>
-        </p>
+        <Container className="mt-2 pt-2 d-flex flex-column">
+          <Row>
+            <Col md={{ span: 6, offset: 3}}>
+              <Alert variant="info">
+              <Spinner animation="border" role="status" variant="info">
+              </Spinner>
+              {'\u00A0'} Please wait...
+              </Alert>
+            </Col>
+          </Row>
+        </Container>
 //      content = <p id="loader" className="text-center">Loading...</p>
     } else {
       content = <Main 
@@ -128,6 +188,12 @@ class App extends Component {
         withdraw={this.withdraw}
         borrow={this.borrow}
         payOff={this.payOff}
+        walletBalance_ETH={this.state.walletBalance_ETH}
+        walletBalance_DBC={this.state.walletBalance_DBC}
+        dBankBalance_ETH={this.state.dBankBalance_ETH}
+        account={this.state.account}
+        isDeposited={this.state.isDeposited}
+
       />      
     }
 
