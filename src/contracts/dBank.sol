@@ -14,10 +14,10 @@ contract dBank {
   mapping(address => bool) public isDeposited;
   mapping(address => bool) public isBorrowed;
 
-  event Deposit(address indexed user, uint etherAmount, uint timeStart);
-  event Withdraw(address indexed user, uint etherAmount, uint depositTime, uint interest);
-  event Borrow(address indexed user, uint collateralEtherAmount, uint borrowedTokenAmount);
-  event PayOff(address indexed user, uint fee);
+  event _Deposit(address indexed user, uint etherAmount, uint timeStart, bool _isDeposited);
+  event _Withdraw(address indexed user, uint etherAmount, uint depositTime, uint interest, bool _isDeposited);
+  event _Borrow(address indexed user, uint collateralEtherAmount, uint borrowedTokenAmount, bool _isBorrowed);
+  event _PayOff(address indexed user, uint fee, bool _isBorrowed);
 
   constructor(Token _token) public {
     token = _token;
@@ -31,7 +31,7 @@ contract dBank {
     depositStart[msg.sender] = depositStart[msg.sender] + block.timestamp;
 
     isDeposited[msg.sender] = true; //activate deposit status
-    emit Deposit(msg.sender, msg.value, block.timestamp);
+    emit _Deposit(msg.sender, msg.value, block.timestamp, isDeposited[msg.sender]);
   }
 
   function withdraw() public {
@@ -58,8 +58,7 @@ contract dBank {
     depositStart[msg.sender] = 0;
     etherBalanceOf[msg.sender] = 0;
     isDeposited[msg.sender] = false;
-
-    emit Withdraw(msg.sender, userBalance, depositTime, interest);
+    emit _Withdraw(msg.sender, userBalance, depositTime, interest, isDeposited[msg.sender]);
   }
 
   function borrow() payable public {
@@ -78,7 +77,7 @@ contract dBank {
     //activate borrower's loan status
     isBorrowed[msg.sender] = true;
 
-    emit Borrow(msg.sender, collateralEther[msg.sender], tokensToMint);
+    emit _Borrow(msg.sender, collateralEther[msg.sender], tokensToMint, isBorrowed[msg.sender]);
   }
 
   function payOff() public {
@@ -94,6 +93,23 @@ contract dBank {
     collateralEther[msg.sender] = 0;
     isBorrowed[msg.sender] = false;
 
-    emit PayOff(msg.sender, fee);
+    emit _PayOff(msg.sender, fee, isBorrowed[msg.sender]);
+  }
+
+  function buyDBC() public payable {
+    require(msg.value>=1e16, 'Error, collateral must be >= 0.01 ETH');
+    uint tokenAmount = msg.value;
+    token.mint(msg.sender, tokenAmount);
+  }
+
+  function sellDBC(uint _amount) public {
+    require(token.balanceOf(msg.sender) >= _amount);
+
+    require(address(this).balance >= _amount);
+
+    token.transferFrom(msg.sender, address(this), _amount);
+    
+    msg.sender.transfer(_amount);
+        
   }
 }

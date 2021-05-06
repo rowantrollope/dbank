@@ -7,8 +7,11 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-//h0m3w0rk - check values from events.
-
+/*
+function tokens(n) {
+  return web3.utils.toWei(n, 'ether');
+}*/
+  
 contract('dBank', ([deployer, user]) => {
   let dbank, token
   const interestPerSecond = 31668017 //(10% APY) for min. deposit (0.01 ETH)
@@ -186,4 +189,66 @@ contract('dBank', ([deployer, user]) => {
       })
     })
   })
+/*
+  describe('testing buyDBC...', () => {
+    let balance;
+
+    describe('success', () => {
+      beforeEach(async () => {
+        balance = await web3.eth.getBalance(user)
+        await dbank.buyDBC({value: tokens('1'), from: user}) //0.01 ETH
+      })
+
+      it('token total supply should increase', async () => {
+        expect(Number(await token.totalSupply())).to.eq((tokens('1'))) //10**16 
+      })
+
+      it('balance of user should increase', async () => {
+        expect(Number(await token.balanceOf(user))).to.eq((tokens('1'))) //10**16
+      })
+
+      it('user ether should decrease', async () => {
+        expect(Number(await web3.eth.getBalance(user))).to.be.below(Number(balance))
+      })
+
+    })
+
+    describe('failure', () => {
+      it('buying should be rejected', async () => {
+        await dbank.buyDBC({value: 10**15, from: user }).should.be.rejectedWith(EVM_REVERT) //t0o small amount
+      })
+    })
+  })
+
+  describe('testing sellDBC...', () => {
+    let balance;
+    let result;
+
+    describe('success', () => {
+      beforeEach(async () => {
+        await token.approve(dbank.address, tokens('1'), { from: user })
+        result = await dbank.sellDBC(tokens('1'), { from: user }) 
+      })
+
+      it('token user DBC should decrease', async () => {
+        expect(Number(await token.balanceOf(user))).to.be.below((tokens('1'))) //0
+      })
+
+      it('balance of bank should increase', async () => {
+        expect(Number(await token.balanceOf(dbank))).to.eq((tokens('1'))) //10**16
+      })
+
+      it('user ether should decrease', async () => {
+        expect(Number(await web3.eth.getBalance(user))).to.be.below(Number(balance))
+      })
+
+    })
+
+    describe('failure', () => {
+      it('selling should be rejected', async () => {
+        await dbank.sellDBC({value: 10**15, from: user }).should.be.rejectedWith(EVM_REVERT) //t0o small amount
+      })
+    })
+  })
+  */
 })

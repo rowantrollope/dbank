@@ -15,10 +15,11 @@ class Main extends Component {
               </Card.Header>
               <Card.Body>
                 <Card.Text >
-                  Account Numer: { shortenAddress(this.props.account) } <br/><br/>
+                  Account Number: { shortenAddress(this.props.account) }<br/><br/>
                   ETH Balance: { window.web3.utils.fromWei(this.props.walletBalance_ETH, 'Ether') } <br/>
                   DBC Balance: { window.web3.utils.fromWei(this.props.walletBalance_DBC, 'Ether') } <br/>
-                   <br/>
+                  Has Staked: { this.props.isDeposited ? "Yes" : "No" } <br/>
+                  Has Borrowed: { this.props.isBorrowed ? "Yes" : "No" } <br/>
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -30,6 +31,7 @@ class Main extends Component {
                 <Card.Text>
                   Account Number: { shortenAddress(this.props.dBankAddress) } <br/><br/>
                   ETH Staked: { window.web3.utils.fromWei(this.props.dBankStakedBalance_ETH, 'Ether') } <br/>
+                  ETH Collateral: { window.web3.utils.fromWei(this.props.dBankCollateralBalance_ETH, 'Ether') } <br/>
                   ETH Balance: { window.web3.utils.fromWei(this.props.dBankBalance_ETH, 'Ether') } <br/>
                   DBC Balance: { window.web3.utils.fromWei(this.props.dBankBalance_DBC, 'Ether') } <br/>
                 </Card.Text>
@@ -77,7 +79,7 @@ class Main extends Component {
                   </div>
                 </Tab>
 
-                <Tab eventKey="borrow" title="Borrow">
+                <Tab eventKey="borrow" title="Borrow" disabled={this.props.isBorrowed}>
                   <div>
                     <br></br>
                     Do you want to borrow tokens? <br/>
@@ -103,7 +105,7 @@ class Main extends Component {
                   </div>
                 </Tab>
                 
-                <Tab eventKey="payOff" title="Payoff">
+                <Tab eventKey="payOff" title="Payoff" disabled={!this.props.isBorrowed}>
                   <div>
                     <br/>
                     Do you want to payoff the loan? <br/>
@@ -111,6 +113,59 @@ class Main extends Component {
                     <button type='submit' className='btn btn-primary' onClick={(e) => this.props.payOff(e)}>PAYOFF</button>
                   </div>
                 </Tab>
+
+                <Tab eventKey="Buy DBC" title="BuyDBC">
+                  <div>
+                    <br/>
+                    Buy DBC <br/>
+                    <form onSubmit={(e) => {
+                        e.preventDefault()
+                        let amount;
+                        amount = this.buyAmount.value.toString();
+                        amount = window.web3.utils.toWei(amount, 'Ether')
+                        this.props.buyDBC(amount)
+                        }}>
+                     <div className='form-group mr-sm-2'>
+                      <input
+                          id='buyAmount'
+                          step="0.01"
+                          type='number'
+                          ref={(input) => { this.buyAmount = input }}
+                          className="form-control form-control-md"
+                          placeholder='amount...'
+                          required />
+                      </div>
+                      <button type='submit' className='btn btn-primary'>BUY</button>
+                    </form>
+                  </div>
+                </Tab>
+
+                <Tab eventKey="Sell DBC" title="SellDBC">
+                  <div>
+                    <br/>
+                    Sell DBC <br/>
+                    <form onSubmit={(e) => {
+                        e.preventDefault()
+                        let amount
+                        amount = this.sellAmount.value.toString(); 
+                        amount = window.web3.utils.toWei(amount, 'Ether')
+                        this.props.sellDBC(amount)
+                        }}>
+                     <div className='form-group mr-sm-2'>
+                      <input
+                          id='buyAmount'
+                          step="0.01"
+                          type='number'
+                          ref={(input) => { this.sellAmount = input }}
+                          className="form-control form-control-md"
+                          placeholder='amount...'
+                          required />
+                      </div>
+                      <button type='submit' className='btn btn-primary'>SELL</button>
+                    </form>
+                  </div>
+                </Tab>
+
               </Tabs>
             </div>
           </Col>

@@ -22,9 +22,9 @@
     "react-bootstrap": "^1.5.2",
     "react-dom": "16.13.1",
     "react-scripts": "^4.0.3",
-    "truffle": "5.1.63",
+    "truffle": "^5.1.63",
     "truffle-hdwallet-provider-privkey": "0.3.0",
-    "web3": "1.2.6"
+    "web3": "^1.2.6"
   },
   "scripts": {
     "start": "react-scripts start",

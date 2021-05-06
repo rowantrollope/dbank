@@ -48,18 +48,24 @@ class App extends Component {
       // load balances
       try {
         const isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+        const isBorrowed = await this.state.dbank.methods.isBorrowed(this.state.account).call(); 
         const dBankStakedBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
-        const dBankBalance_ETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
+        const dBankCollateralBalance_ETH = await this.state.dbank.methods.collateralEther(this.state.account).call();
         const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
         const walletBalance_DBC= await this.state.token.methods.balanceOf(this.state.account).call();
         const dBankBalance_DBC = await this.state.token.methods.balanceOf(this.state.dBankAddress).call();
+        const totalETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
+        const dBankBalance_ETH = (totalETH - dBankStakedBalance_ETH - dBankCollateralBalance_ETH).toString();
+    
         this.setState({  
           isDeposited, 
-          walletBalance_ETH,
+          isBorrowed,
+          walletBalance_ETH, 
           walletBalance_DBC,
           dBankStakedBalance_ETH,
+          dBankCollateralBalance_ETH,
           dBankBalance_ETH,
-          dBankBalance_DBC 
+          dBankBalance_DBC
         })
       } catch (e) {
         console.log('Error', e)
@@ -75,19 +81,23 @@ class App extends Component {
   update_balances = async() => {
 
     const isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+    const isBorrowed = await this.state.dbank.methods.isBorrowed(this.state.account).call(); 
     const dBankStakedBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
+    const dBankCollateralBalance_ETH = await this.state.dbank.methods.collateralEther(this.state.account).call();
     const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
     const walletBalance_DBC = await this.state.token.methods.balanceOf(this.state.account).call();
-    const dBankBalance_ETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
     const dBankBalance_DBC = await this.state.token.methods.balanceOf(this.state.dBankAddress).call();
-
+    const totalETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
+    const dBankBalance_ETH = (totalETH - dBankStakedBalance_ETH - dBankCollateralBalance_ETH).toString();
     this.setState({ 
       isDeposited, 
+      isBorrowed,
       walletBalance_ETH,
       walletBalance_DBC,
       dBankStakedBalance_ETH,
+      dBankCollateralBalance_ETH,
       dBankBalance_ETH,
-      dBankBalance_DBC 
+      dBankBalance_DBC
     })
 
   }
@@ -126,24 +136,54 @@ class App extends Component {
     if(this.state.dbank!=='undefined'){
       try{
         await this.state.dbank.methods.borrow().send({value: amount.toString(), from: this.state.account})
+        this.update_balances();
       } catch (e) {
         console.log('Error, borrow: ', e)
       }
     }
     this.setState({loading: false})
   }
-
+  
   payOff = async (e) => {
     this.setState({loading: true})
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
-        const collateralEther = await this.state.dbank.methods.collateralEther(this.state.account).call({from: this.state.account})
+        const collateralEther = await this.state.dbank.methods.collateralEther(this.state.account).call();
         const tokenBorrowed = collateralEther/2
         await this.state.token.methods.approve(this.state.dBankAddress, tokenBorrowed.toString()).send({from: this.state.account})
         await this.state.dbank.methods.payOff().send({from: this.state.account})
+        this.update_balances();
       } catch(e) {
         console.log('Error, pay off: ', e)
+      }
+    }
+    this.setState({loading: false})
+  }
+
+  buyDBC = async (amount) => {
+    this.setState({loading: true})
+    if(this.state.dbank!=='undefined'){
+      try{
+        await this.state.dbank.methods.buyDBC().send({value: amount.toString(), from: this.state.account})
+        this.update_balances();
+      } catch (e) {
+        console.log('Error, buy: ', e)
+      }
+    }
+    this.setState({loading: false})
+  }
+  
+  sellDBC = async (amount) => {
+    this.setState({loading: true})
+
+    if(this.state.dbank!=='undefined'){
+      try {
+        await this.state.token.methods.approve(this.state.dBankAddress, amount).send({ from: this.state.account })
+        await this.state.dbank.methods.sellDBC(amount).send({ from: this.state.account })
+        this.update_balances();
+      } catch (e) {
+        console.log('Error, sell: ', e)
       }
     }
     this.setState({loading: false})
@@ -163,6 +203,7 @@ class App extends Component {
       dBankBalance_DBC: 0,
       dBankAddress: null,
       isDeposited: false,
+      isBorrowed: false,
       loading: true
     }
   }
@@ -189,14 +230,18 @@ class App extends Component {
         withdraw={this.withdraw}
         borrow={this.borrow}
         payOff={this.payOff}
+        buyDBC={this.buyDBC}
+        sellDBC={this.sellDBC}
         walletBalance_ETH={this.state.walletBalance_ETH}
         walletBalance_DBC={this.state.walletBalance_DBC}
         dBankBalance_ETH={this.state.dBankBalance_ETH}
         dBankBalance_DBC={this.state.dBankBalance_DBC}
+        dBankCollateralBalance_ETH={this.state.dBankCollateralBalance_ETH}
         dBankStakedBalance_ETH={this.state.dBankStakedBalance_ETH}
         dBankAddress={this.state.dBankAddress}
         account={this.state.account}
         isDeposited={this.state.isDeposited}
+        isBorrowed={this.state.isBorrowed}
 
       />      
     }
