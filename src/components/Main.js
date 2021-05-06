@@ -1,20 +1,40 @@
 import React, { Component } from 'react';
-import { Alert, Container, Tabs, Tab, Row, Col } from 'react-bootstrap'
+//import { Text, StyleSheet } from "react-native";
+import { Badge, Alert, Container, Tabs, Tab, Row, Col, Card } from 'react-bootstrap'
 import './App.css';
 
 class Main extends Component {
 
   render() {
-    return (
+    return (  
       <Container className="container-fluid mt-5 flex-column">
-        <Row>
-          <Col className="col-md-12">
-            <Alert variant="success">
-              Wallet Balance (ETH): { window.web3.utils.fromWei(this.props.walletBalance_ETH, 'Ether') } <br/>
-              Wallet Balance (DBC): { window.web3.utils.fromWei(this.props.walletBalance_DBC, 'Ether') } <br/> <br/>
-              Bank Balance (ETH): { window.web3.utils.fromWei(this.props.dBankBalance_ETH, 'Ether') } <br/>
-              Deposit Made: { this.props.isDeposited.toString() }
-            </Alert>
+         <Row>
+          <Col className="col-md-6">
+            <Card border="primary">
+              <Card.Header as="h5">User Account<br/>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text >
+                  Account Numer: { shortenAddress(this.props.account) } <br/><br/>
+                  ETH Balance: { window.web3.utils.fromWei(this.props.walletBalance_ETH, 'Ether') } <br/>
+                  DBC Balance: { window.web3.utils.fromWei(this.props.walletBalance_DBC, 'Ether') } <br/>
+                   <br/>
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col className="col-md-6">
+            <Card border="danger">
+              <Card.Header as="h5">Bank Account</Card.Header>
+              <Card.Body>
+                <Card.Text>
+                  Account Number: { shortenAddress(this.props.dBankAddress) } <br/><br/>
+                  ETH Staked: { window.web3.utils.fromWei(this.props.dBankStakedBalance_ETH, 'Ether') } <br/>
+                  ETH Balance: { window.web3.utils.fromWei(this.props.dBankBalance_ETH, 'Ether') } <br/>
+                  DBC Balance: { window.web3.utils.fromWei(this.props.dBankBalance_DBC, 'Ether') } <br/>
+                </Card.Text>
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
         <Row>
@@ -22,12 +42,12 @@ class Main extends Component {
             <div className="content mr-auto ml-auto">
               <Tabs defaultActiveKey="profile" id="uncontrolled-tab-example">
                 
-                <Tab eventKey="deposit" title="Deposit" disabled={this.props.isDeposited}>
+                <Tab eventKey="stake" title="Stake" disabled={this.props.isDeposited}>
                   <div>
                     <br/>
-                    How much do you want to deposit? <br/>
+                    How much do you want to stake? <br/>
                     (min. amount is 0.01 ETH) <br/>
-                    (1 deposit is possible at the time) <br/><br/>
+                    (1 stake is possible at the time) <br/><br/>
 
                     <form onSubmit={(e) => {
                         e.preventDefault()
@@ -44,7 +64,7 @@ class Main extends Component {
                           placeholder='amount...'
                           required />
                       </div>
-                      <button type='submit' className='btn btn-primary'>DEPOSIT</button>
+                      <button type='submit' className='btn btn-primary'>STAKE</button>
                     </form>
                   </div>
                 </Tab>
@@ -100,4 +120,8 @@ class Main extends Component {
   }
 }
 
+function shortenAddress(address) {
+
+  return address.substr(0, 6) + '\u2026' + address.substr(address.length-4, 4);
+}
 export default Main;

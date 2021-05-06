@@ -24,5 +24,3 @@ class MyNav extends Component {
 }
 
 export default MyNav;
-
-//<Identicon string='{this.props.account}' size="20" />

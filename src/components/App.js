@@ -47,15 +47,20 @@ class App extends Component {
 
       // load balances
       try {
-        let isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
-        let dBankBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
-        let walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
-        let walletBalance_DBC= await this.state.token.methods.balanceOf(this.state.account).call();
+        const isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+        const dBankStakedBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
+        const dBankBalance_ETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
+        const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
+        const walletBalance_DBC= await this.state.token.methods.balanceOf(this.state.account).call();
+        const dBankBalance_DBC = await this.state.token.methods.balanceOf(this.state.dBankAddress).call();
         this.setState({  
           isDeposited, 
+          walletBalance_ETH,
+          walletBalance_DBC,
+          dBankStakedBalance_ETH,
           dBankBalance_ETH,
-          walletBalance_ETH, 
-          walletBalance_DBC })
+          dBankBalance_DBC 
+        })
       } catch (e) {
         console.log('Error', e)
         window.alert('Error Loading balances')
@@ -70,14 +75,20 @@ class App extends Component {
   update_balances = async() => {
 
     const isDeposited = await this.state.dbank.methods.isDeposited(this.state.account).call(); 
+    const dBankStakedBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
     const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
     const walletBalance_DBC = await this.state.token.methods.balanceOf(this.state.account).call();
-    const dBankBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
+    const dBankBalance_ETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
+    const dBankBalance_DBC = await this.state.token.methods.balanceOf(this.state.dBankAddress).call();
 
-    this.setState({ isDeposited, 
-                    walletBalance_ETH,
-                    walletBalance_DBC,
-                    dBankBalance_ETH })
+    this.setState({ 
+      isDeposited, 
+      walletBalance_ETH,
+      walletBalance_DBC,
+      dBankStakedBalance_ETH,
+      dBankBalance_ETH,
+      dBankBalance_DBC 
+    })
 
   }
 
@@ -96,10 +107,6 @@ class App extends Component {
     this.setState({loading: false})
   }
 
-  //balanceOf = async (account) => {
-  //  await this.state.web3.eth.getBalance(account);
-  //}
-
   withdraw = async (e) => {
     this.setState({loading: true})
     e.preventDefault()
@@ -113,14 +120,6 @@ class App extends Component {
     }
     this.setState({loading: false})
   }
-
-  /*updateBalances = async () => {
-    const balance = await this.state.web3.eth.getBalance(this.state.account);
-    this.setState({walletBalance_ETH: balance});
-    balance = await this.state.token.balanceOf(this.state.account);
-    this.setState({walletBalance_DBC: balance}); 
-
-  }*/
 
   borrow = async (amount) => {
     this.setState({loading: true})
@@ -159,7 +158,9 @@ class App extends Component {
       dbank: null,
       walletBalance_ETH: 0,
       walletBalance_DBC: 0,
+      dBankStakedBalance_ETH: 0,
       dBankBalance_ETH: 0,
+      dBankBalance_DBC: 0,
       dBankAddress: null,
       isDeposited: false,
       loading: true
@@ -191,6 +192,9 @@ class App extends Component {
         walletBalance_ETH={this.state.walletBalance_ETH}
         walletBalance_DBC={this.state.walletBalance_DBC}
         dBankBalance_ETH={this.state.dBankBalance_ETH}
+        dBankBalance_DBC={this.state.dBankBalance_DBC}
+        dBankStakedBalance_ETH={this.state.dBankStakedBalance_ETH}
+        dBankAddress={this.state.dBankAddress}
         account={this.state.account}
         isDeposited={this.state.isDeposited}
 
