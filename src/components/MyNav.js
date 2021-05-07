@@ -7,7 +7,7 @@ class MyNav extends Component {
 
     render() {
         return (
-            <Navbar bg="primary" variant="dark" expand="lg">
+            <Navbar bg="primary" variant="dark" expand="lg" sticky="top">
                 <img src={dbank} className="App-logo" alt="logo" height="32"/>
                 <Navbar.Brand>
                     le Banco Digital

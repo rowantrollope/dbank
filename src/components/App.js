@@ -247,10 +247,10 @@ class App extends Component {
     }
 
     return (
-      <div className='text-monospace'>
+      <span>
         <MyNav account = {this.state.account}/>
         { content }
-      </div>
+      </span>
     );
   }
 }
