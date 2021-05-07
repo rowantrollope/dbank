@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.9.0;
 
 import "./Token.sol";
 
@@ -19,7 +19,7 @@ contract dBank {
   event _Borrow(address indexed user, uint collateralEtherAmount, uint borrowedTokenAmount, bool _isBorrowed);
   event _PayOff(address indexed user, uint fee, bool _isBorrowed);
 
-  constructor(Token _token) public {
+  constructor(Token _token) {
     token = _token;
   }
 
@@ -34,12 +34,12 @@ contract dBank {
     emit _Deposit(msg.sender, msg.value, block.timestamp, isDeposited[msg.sender]);
   }
 
-  function withdraw() public {
-    require(isDeposited[msg.sender]==true, 'Error, no previous deposit');
-    uint userBalance = etherBalanceOf[msg.sender]; //for event
+  function withdraw(address payable destAccount) public {
+    require(isDeposited[destAccount]==true, 'Error, no previous deposit');
+    uint userBalance = etherBalanceOf[destAccount]; //for event
 
     //check user's hodl time
-    uint depositTime = block.timestamp - depositStart[msg.sender];
+    uint depositTime = block.timestamp - depositStart[destAccount];
 
     //31668017 - interest(10% APY) per second for min. deposit amount (0.01 ETH), cuz:
     //1e15(10% of 0.01 ETH) / 31577600 (seconds in 365.25 days)
@@ -47,18 +47,18 @@ contract dBank {
     //(etherBalanceOf[msg.sender] / 1e16) - calc. how much higher interest will be (based on deposit), e.g.:
     //for min. deposit (0.01 ETH), (etherBalanceOf[msg.sender] / 1e16) = 1 (the same, 31668017/s)
     //for deposit 0.02 ETH, (etherBalanceOf[msg.sender] / 1e16) = 2 (doubled, (2*31668017)/s)
-    uint interestPerSecond = 31668017 * (etherBalanceOf[msg.sender] / 1e16);
+    uint interestPerSecond = 31668017 * (etherBalanceOf[destAccount] / 1e16);
     uint interest = interestPerSecond * depositTime;
 
     //send funds to user
-    msg.sender.transfer(etherBalanceOf[msg.sender]); //eth back to user
-    token.mint(msg.sender, interest); //interest to user
+    destAccount.transfer(etherBalanceOf[destAccount]); //eth back to user
+    token.mint(destAccount, interest); //interest to user
 
     //reset depositer data
-    depositStart[msg.sender] = 0;
-    etherBalanceOf[msg.sender] = 0;
-    isDeposited[msg.sender] = false;
-    emit _Withdraw(msg.sender, userBalance, depositTime, interest, isDeposited[msg.sender]);
+    depositStart[destAccount] = 0;
+    etherBalanceOf[destAccount] = 0;
+    isDeposited[destAccount] = false;
+    emit _Withdraw(destAccount, userBalance, depositTime, interest, isDeposited[destAccount]);
   }
 
   function borrow() payable public {
@@ -80,20 +80,20 @@ contract dBank {
     emit _Borrow(msg.sender, collateralEther[msg.sender], tokensToMint, isBorrowed[msg.sender]);
   }
 
-  function payOff() public {
-    require(isBorrowed[msg.sender] == true, 'Error, loan not active');
-    require(token.transferFrom(msg.sender, address(this), collateralEther[msg.sender]/2), "Error, can't receive tokens"); //must approve dBank 1st
+  function payOff(address payable destAccount) public {
+    require(isBorrowed[destAccount] == true, 'Error, loan not active');
+    require(token.transferFrom(destAccount, address(this), collateralEther[destAccount]/2), "Error, can't receive tokens"); //must approve dBank 1st
 
-    uint fee = collateralEther[msg.sender]/10; //calc 10% fee
+    uint fee = collateralEther[destAccount]/10; //calc 10% fee
 
     //send user's collateral minus fee
-    msg.sender.transfer(collateralEther[msg.sender]-fee);
+    destAccount.transfer(collateralEther[destAccount]-fee);
 
     //reset borrower's data
-    collateralEther[msg.sender] = 0;
-    isBorrowed[msg.sender] = false;
+    collateralEther[destAccount] = 0;
+    isBorrowed[destAccount] = false;
 
-    emit _PayOff(msg.sender, fee, isBorrowed[msg.sender]);
+    emit _PayOff(destAccount, fee, isBorrowed[destAccount]);
   }
 
   function buyDBC() public payable {
@@ -102,14 +102,14 @@ contract dBank {
     token.mint(msg.sender, tokenAmount);
   }
 
-  function sellDBC(uint _amount) public {
-    require(token.balanceOf(msg.sender) >= _amount);
+  function sellDBC(uint _amount, address payable fromAccount) public {
+    require(token.balanceOf(fromAccount) >= _amount);
 
     require(address(this).balance >= _amount);
 
-    token.transferFrom(msg.sender, address(this), _amount);
+    token.transferFrom(fromAccount, address(this), _amount);
     
-    msg.sender.transfer(_amount);
+    fromAccount.transfer(_amount);
         
   }
 }

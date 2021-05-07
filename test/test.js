@@ -91,7 +91,7 @@ contract('dBank', ([deployer, user]) => {
         await wait(2) //accruing interest
 
         balance = await web3.eth.getBalance(user)
-        await dbank.withdraw({from: user})
+        await dbank.withdraw(user)
       })
 
       it('balances should decrease', async () => {
@@ -122,7 +122,7 @@ contract('dBank', ([deployer, user]) => {
       it('withdrawing should be rejected', async () =>{
         await dbank.deposit({value: 10**16, from: user}) //0.01 ETH
         await wait(2) //accruing interest
-        await dbank.withdraw({from: deployer}).should.be.rejectedWith(EVM_REVERT) //wrong user
+        await dbank.withdraw(deployer).should.be.rejectedWith(EVM_REVERT) //wrong user
       })
     })
   })
@@ -164,7 +164,7 @@ contract('dBank', ([deployer, user]) => {
       beforeEach(async () => {
         await dbank.borrow({value: 10**16, from: user}) //0.01 ETH
         await token.approve(dbank.address, (5*(10**15)).toString(), {from: user})
-        await dbank.payOff({from: user})
+        await dbank.payOff(user)
       })
 
       it('user token balance should eq 0', async () => {
@@ -185,7 +185,7 @@ contract('dBank', ([deployer, user]) => {
       it('paying off should be rejected', async () =>{
         await dbank.borrow({value: 10**16, from: user}) //0.01 ETH
         await token.approve(dbank.address, (5*(10**15)).toString(), {from: user})
-        await dbank.payOff({from: deployer}).should.be.rejectedWith(EVM_REVERT) //wrong user
+        await dbank.payOff(deployer).should.be.rejectedWith(EVM_REVERT) //wrong user
       })
     })
   })

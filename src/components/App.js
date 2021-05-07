@@ -6,6 +6,8 @@ import MyNav from "./MyNav.js";
 import Main from "./Main.js";
 import { Container, Spinner, Alert, Row, Col } from 'react-bootstrap';
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import "react-bootstrap/dist/react-bootstrap.min.js";
 import './App.css';
 
 class App extends Component {
@@ -122,7 +124,7 @@ class App extends Component {
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
-        await this.state.dbank.methods.withdraw().send({from: this.state.account})
+        await this.state.dbank.methods.withdraw(this.state.account).send()
         this.update_balances();
      } catch(e) {
         console.log('Error, withdraw: ', e)
@@ -152,7 +154,7 @@ class App extends Component {
         const collateralEther = await this.state.dbank.methods.collateralEther(this.state.account).call();
         const tokenBorrowed = collateralEther/2
         await this.state.token.methods.approve(this.state.dBankAddress, tokenBorrowed.toString()).send({from: this.state.account})
-        await this.state.dbank.methods.payOff().send({from: this.state.account})
+        await this.state.dbank.methods.payOff(this.state.account).send({from: this.state.account})
         this.update_balances();
       } catch(e) {
         console.log('Error, pay off: ', e)
@@ -180,7 +182,7 @@ class App extends Component {
     if(this.state.dbank!=='undefined'){
       try {
         await this.state.token.methods.approve(this.state.dBankAddress, amount).send({ from: this.state.account })
-        await this.state.dbank.methods.sellDBC(amount).send({ from: this.state.account })
+        await this.state.dbank.methods.sellDBC(amount, this.state.account).send({ from: this.state.account })
         this.update_balances();
       } catch (e) {
         console.log('Error, sell: ', e)
@@ -223,7 +225,6 @@ class App extends Component {
             </Col>
           </Row>
         </Container>
-//      content = <p id="loader" className="text-center">Loading...</p>
     } else {
       content = <Main 
         deposit={this.deposit}
@@ -247,10 +248,10 @@ class App extends Component {
     }
 
     return (
-      <span>
+      <View>
         <MyNav account = {this.state.account}/>
         { content }
-      </span>
+      </View>
     );
   }
 }
