@@ -87,14 +87,15 @@ class App extends Component {
     const dBankStakedBalance_ETH = await this.state.dbank.methods.etherBalanceOf(this.state.account).call();
     const dBankCollateralBalance_ETH = await this.state.dbank.methods.collateralEther(this.state.account).call();
     const walletBalance_ETH = await this.state.web3.eth.getBalance(this.state.account);
-    const walletBalance_DBC = await this.state.token.methods.balanceOf(this.state.account).call();
+    const walletBalance_DBC= await this.state.token.methods.balanceOf(this.state.account).call();
     const dBankBalance_DBC = await this.state.token.methods.balanceOf(this.state.dBankAddress).call();
     const totalETH = await this.state.web3.eth.getBalance(this.state.dBankAddress);
     const dBankBalance_ETH = (totalETH - dBankStakedBalance_ETH - dBankCollateralBalance_ETH).toString();
-    this.setState({ 
+
+    this.setState({  
       isDeposited, 
       isBorrowed,
-      walletBalance_ETH,
+      walletBalance_ETH, 
       walletBalance_DBC,
       dBankStakedBalance_ETH,
       dBankCollateralBalance_ETH,
@@ -124,7 +125,7 @@ class App extends Component {
     e.preventDefault()
     if(this.state.dbank!=='undefined'){
       try{
-        await this.state.dbank.methods.withdraw(this.state.account).send()
+        await this.state.dbank.methods.withdraw(this.state.account).send({from: this.state.account})
         this.update_balances();
      } catch(e) {
         console.log('Error, withdraw: ', e)
@@ -243,15 +244,14 @@ class App extends Component {
         account={this.state.account}
         isDeposited={this.state.isDeposited}
         isBorrowed={this.state.isBorrowed}
-
       />      
     }
 
     return (
-      <View>
+      <>
         <MyNav account = {this.state.account}/>
         { content }
-      </View>
+      </>
     );
   }
 }

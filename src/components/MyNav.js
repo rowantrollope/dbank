@@ -7,9 +7,9 @@ class MyNav extends Component {
 
     render() {
         return (
-            <Navbar bg="primary" variant="dark" expand="lg">
-                <Navbar.Brand>
+            <Navbar style={styles.myNav} bg="primary" variant="dark" expand="lg">
                     <img src={dbank} className="App-logo" alt="logo" height="32"/>
+                <Navbar.Brand style={styles.myNav}>
                     le Banco Digital
                 </Navbar.Brand>
                 <Navbar.Toggle />
@@ -22,5 +22,10 @@ class MyNav extends Component {
         )
     }
 }
-
+const styles = {
+    myNav: {
+        paddingLeft: "1vw",
+        paddingRight: "1vw",
+    }
+}
 export default MyNav;
